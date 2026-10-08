@@ -3,6 +3,7 @@ import { animalVelocity } from './animals.js';
 import { clamp } from './utils.js';
 
 const EDGE = { kind: 'edge' };
+const LEAD_DOUBT = 0.5;
 
 // Everything `team`'s arrows can hit, as capsules {x, y, h, r}.
 export function collectObstacles(m, team) {
@@ -73,8 +74,20 @@ export function stepArrow(ar, obs, board, distance, onHit) {
   }
 }
 
+// Where each arrow of `team`'s volley starts: line abreast across the line of fire,
+// centred on the launch point.
+export function volleyStarts(m, team, angle) {
+  const L = m.board.castles[team].launch, n = m.teams[team].arrows;
+  const px = -Math.sin(angle), py = Math.cos(angle), starts = [];
+  for (let i = 0; i < n; i++) {
+    const off = (i - (n - 1) / 2) * ARROW.spread;
+    starts.push({ x: L.x + px * off, y: L.y + py * off });
+  }
+  return starts;
+}
+
 // A frozen copy of the field for dry runs. With `lead`, animals carry their current
-// velocity so the dry run can move them while the arrow is in the air.
+// velocity so the dry run can move them while the arrows are in the air.
 function freeze(m, team, lead) {
   return collectObstacles(m, team).map(o => {
     const v = lead && o.kind === 'animal' ? animalVelocity(o.ref) : { x: 0, y: 0 };
@@ -82,21 +95,28 @@ function freeze(m, team, lead) {
   });
 }
 
-// Dry run of one arrow against frozen obstacles `obs`, launched `delay` seconds into the
-// volley. Mutates obs (damage, deaths) so the next arrow of the volley sees the result.
-function dryArrow(m, team, angle, obs, damage, delay, maxContacts, points) {
-  const L = m.board.castles[team].launch;
-  const ar = {
-    x: L.x, y: L.y, dx: Math.cos(angle), dy: Math.sin(angle),
+// Dry run of a whole volley against frozen obstacles `obs`, loosed `start` seconds from
+// now. The arrows step together, as they do in flight, so one that kills an animal lets
+// its neighbours fly on. Returns what the volley brings in; with `paths`, also fills it
+// with each arrow's start and contacts.
+// doubt: how much of the ground an animal covers before an arrow reaches it counts as
+// uncertainty about where it will be. Meat from a hit is marked down by the odds that
+// the animal is still in the way, so a far-off sprinter is worth less than a near grazer.
+function dryVolley(m, team, angle, obs, { start = 0, maxContacts = Infinity, paths = null, doubt = 0 } = {}) {
+  const damage = m.teams[team].damage, res = { meat: 0, castle: 0 };
+  let t = start;
+  const arrows = volleyStarts(m, team, angle).map(p => ({
+    x: p.x, y: p.y, dx: Math.cos(angle), dy: Math.sin(angle),
     bouncesLeft: Math.min(ARROW.bounces, maxContacts - 1), done: false,
-  };
-  const res = { meat: 0, castle: 0 };
-  const onHit = o => {
-    if (points) points.push({ x: ar.x, y: ar.y, kind: o.kind, ox: o.x, oy: o.y, r: o.r });
+    pts: paths ? [{ x: p.x, y: p.y, kind: 'start' }] : null,
+  }));
+  if (paths) for (const ar of arrows) paths.push(ar.pts);
+  const onHit = (o, ar) => {
+    if (ar.pts) ar.pts.push({ x: ar.x, y: ar.y, kind: o.kind, ox: o.x, oy: o.y, r: o.r });
     if (o.kind === 'animal') {
-      const dealt = Math.min(o.hp, damage);
+      const dealt = Math.min(o.hp, damage), stray = o.ref.speed * t * doubt;
       o.hp -= dealt;
-      res.meat += o.ref.meat * dealt / o.ref.maxHp;
+      res.meat += (o.ref.meat * dealt / o.ref.maxHp) * Math.min(1, (o.r + ARROW.radius) / (stray || 1));
       if (o.hp <= 0) o.dead = true;
       return 'stop';
     }
@@ -105,35 +125,29 @@ function dryArrow(m, team, angle, obs, damage, delay, maxContacts, points) {
       return 'stop';
     }
   };
-  const chunk = 24;
-  for (let i = 0; i < 400 && !ar.done; i++) {
-    const t = delay + (i * chunk) / ARROW.speed;
+  const chunk = 6;
+  for (let i = 0; i < 400 && arrows.some(ar => !ar.done); i++) {
+    t = start + (i * chunk) / ARROW.speed;
     for (const o of obs) {
       o.x = o.x0 + o.vx * t;
       o.y = o.y0 + o.vy * t;
     }
-    stepArrow(ar, obs, m.board, chunk, onHit);
+    for (const ar of arrows) if (!ar.done) stepArrow(ar, obs, m.board, chunk, onHit);
   }
   return res;
 }
 
-// What a whole volley fired at `angle` would bring in: every arrow the team has, one
-// after another down the same line. Used by the AI to pick its shot.
-export function simulateVolley(m, team, angle, lead = false) {
-  const T = m.teams[team], obs = freeze(m, team, lead), total = { meat: 0, castle: 0 };
-  for (let i = 0; i < T.arrows; i++) {
-    const r = dryArrow(m, team, angle, obs, T.damage, i * ARROW.volleyGap, Infinity, null);
-    total.meat += r.meat;
-    total.castle += r.castle;
-  }
-  return total;
+// What a whole volley fired at `angle`, `start` seconds from now, can be expected to bring
+// in. Used by the AI to pick its shot. Leading an animal only guesses at its path, since
+// it may turn; not leading it leaves all of its movement to chance.
+export function simulateVolley(m, team, angle, lead = false, start = 0) {
+  return dryVolley(m, team, angle, freeze(m, team, lead), { start, doubt: lead ? LEAD_DOUBT : 1 });
 }
 
-// Aim preview: launch point, then up to two contacts of a single arrow against the
-// field as it stands right now. Animals are not led, so fast ones still take judgement.
+// Aim preview: for each arrow of the volley, its start and up to two contacts against
+// the field as it stands right now. Animals are not led, so quick ones take judgement.
 export function previewPath(m, team, angle) {
-  const L = m.board.castles[team].launch;
-  const points = [{ x: L.x, y: L.y, kind: 'start' }];
-  dryArrow(m, team, angle, freeze(m, team, false), m.teams[team].damage, 0, 2, points);
-  return points;
+  const paths = [];
+  dryVolley(m, team, angle, freeze(m, team, false), { maxContacts: 2, paths });
+  return paths;
 }

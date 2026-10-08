@@ -103,7 +103,7 @@ export class Input {
       return;
     }
     const id = m.teams[BLUE].hand[idx];
-    if (!id) return; // already played this turn
+    if (!id) return; // nothing dealt into this slot yet
     const blocker = cardBlocker(m, BLUE, id);
     if (blocker) {
       const short = cardCost(m.teams[BLUE], id) - m.teams[BLUE].meat;

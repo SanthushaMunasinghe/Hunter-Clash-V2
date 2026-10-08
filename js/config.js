@@ -26,10 +26,12 @@ export const CASTLE = {
   guardSlots: 2, guard: { melee: 20, archer: 20, giant: 20 },
 };
 
-// An arrow bounces off the field edge up to `bounces` times and is spent on the first
-// animal it hits. damage is the starting hunting damage. castleDamage is the token chip
-// an arrow takes off the enemy castle if it gets that far; it never grows.
-export const ARROW = { speed: 800, radius: 6, step: 3, bounces: 5, damage: 5, castleDamage: 1, volleyGap: 0.16 };
+// An arrow is spent on the first animal it hits. It bounces off the field edge `bounces`
+// times and breaks on the next edge it meets. Arrows are slow next to quick prey, so a
+// shot has to be aimed at where the animal will be. A volley flies line abreast, `spread`
+// px between neighbours. damage is the starting hunting damage. castleDamage is the token
+// chip an arrow takes off the enemy castle if it gets that far; it never grows.
+export const ARROW = { speed: 270, radius: 6, step: 3, bounces: 1, damage: 5, castleDamage: 1, spread: 16 };
 
 // Lane troops. speed: slots covered in one step. range: how many slots ahead it can hit;
 // nothing reaches further than 2. dmg: damage per strike by target kind.
@@ -51,13 +53,13 @@ export const UNITS = {
 // Cheap prey grazes near the castles; the quick kinds keep to the middle, far from both.
 export const ANIMALS = {
   sheep: { hp: 20, meat: 48, r: 15, speed: 15, from: 1, band: [0.5, 0.86] },
-  rabbit: { hp: 5, meat: 18, r: 12, speed: 46, fast: true, from: 1, band: [0, 0.26] },
+  rabbit: { hp: 5, meat: 18, r: 12, speed: 92, fast: true, from: 1, band: [0, 0.26] },
   cow: { hp: 25, meat: 70, r: 17, speed: 14, from: 6, band: [0.42, 0.8] },
   bull: { hp: 30, meat: 96, r: 19, speed: 13, from: 11, band: [0.32, 0.72] },
-  deer: { hp: 5, meat: 28, r: 14, speed: 56, fast: true, from: 11, band: [0, 0.26] },
+  deer: { hp: 5, meat: 28, r: 14, speed: 112, fast: true, from: 11, band: [0, 0.26] },
   bear: { hp: 40, meat: 144, r: 23, speed: 12, from: 16, band: [0.22, 0.62] },
   dino: { hp: 50, meat: 220, r: 27, speed: 10, from: 21, band: [0.08, 0.5] },
-  stag: { hp: 5, meat: 42, r: 15, speed: 64, fast: true, from: 21, band: [0, 0.26] },
+  stag: { hp: 5, meat: 42, r: 15, speed: 128, fast: true, from: 21, band: [0, 0.26] },
 };
 // Opening herd, as point-mirrored pairs.
 export const HERD_START = ['sheep', 'sheep', 'rabbit'];
@@ -77,7 +79,8 @@ export const CARDS = {
 };
 // All the cards, in the order they are laid out when dealt.
 export const CARD_ORDER = ['melee', 'archer', 'giant', 'tower', 'arrow', 'damage'];
-// Each turn deals HAND_SIZE different cards at random; each can be played once that turn.
+// Each turn deals HAND_SIZE different cards at random. Playing one refills its slot at
+// once with a card that is not in the hand.
 export const HAND_SIZE = 4;
 // How likely each card is to be dealt. Any card can turn up on any turn, but the odds
 // follow the match: upgrades and basic troops early, giants and towers once it is under

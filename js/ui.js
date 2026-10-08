@@ -210,7 +210,7 @@ export class UI {
 
     m.teams[BLUE].hand.forEach((id, i) => {
       const el = this.cardEls[i];
-      // A played card leaves its slot empty until the next turn's deal.
+      // A slot is empty only until the first deal; a played card is replaced at once.
       this.put('card' + i, id, () => {
         if (!id) return;
         el.querySelector('.name').textContent = CARDS[id].name;

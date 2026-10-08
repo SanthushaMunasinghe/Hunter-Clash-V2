@@ -4,24 +4,24 @@ A turn-based mobile (portrait) hunt-and-push strategy game for the web. Blue (yo
 
 Each turn has two states:
 
-1. **Hunt** – the card panel slides away; drag in the strip under your castle to pull back, then release. Every arrow you own flies down that line, one after another. An arrow bounces off the field edge (up to 5 times) and is spent on the first animal it hits. When the volley lands, each of your squads strikes whatever is in reach, steps forward if the way is clear, and strikes again where it stops.
-2. **Spend** – each turn deals you four different cards out of six, each playable once that turn. Drag one onto the board:
+1. **Hunt** – the card panel slides away; drag in the strip under your castle to pull back, then release. Every arrow you own flies down that line together, side by side with a small gap between them. Each is spent on the first animal it hits; it bounces off the field edge once and breaks on the next edge it meets. When the volley lands, each of your squads strikes whatever is in reach, steps forward if the way is clear, and strikes again where it stops.
+2. **Spend** – each turn deals you four different cards out of six. Drag one onto the board and its slot is refilled at once with a card you are not holding, so you can keep playing for as long as the meat lasts:
    - **Warriors**, **Archers**, **Giant** – onto either road.
    - **Tower** – onto a checkpoint you hold.
    - **+1 Arrow**, **+Damage** – onto your own castle.
 
-The deal is random but weighted. Early on it is mostly Warriors, Archers and the two upgrades. Giants and Towers become common from about turn 6, and an upgrade turns up less the more of it you own (+1 Arrow is rare once you have three). Any card can still appear on any turn, and a hand always has Warriors or Archers in it. The odds are the `DEAL` table in `js/config.js`.
+The deal is random but weighted. Early on it is mostly Warriors, Archers and the two upgrades. Giants and Towers become common from about turn 6, and an upgrade turns up less the more of it you own (+1 Arrow is rare once you have three). Any card can still appear on any turn, and every fresh hand has Warriors or Archers in it. Refills are drawn with the same odds. The odds are the `DEAL` table in `js/config.js`.
 
 ## Hunting
 
 The herd is small, about six animals. A kill comes back two rounds later.
 
-- **Quick prey** (rabbit, deer, stag; gold number) dies to any hit and pays its whole bounty at once. It keeps to the middle of the field, far from both castles, moves fast, and the aim preview does not lead it for you.
+- **Quick prey** (rabbit, deer, stag; gold number) dies to any hit and pays its whole bounty at once. It keeps to the middle of the field, far from both castles, and moves fast. Arrows are slow by comparison and the aim preview does not lead for you, so you have to shoot at where the animal will be.
 - **Slow prey** (sheep, cow, bull, bear, dino) pays a share of its bounty per hit, in proportion to hunting damage, and takes several hits. The cheapest kinds graze nearest the castles; richer ones roam further out.
 - Nothing ever stands still.
 - Richer prey arrives every 5 turns: cow on 6, bull and deer on 11, bear on 16, dino and stag on 21.
 
-**+1 Arrow** adds an arrow to every volley. **+Damage** adds 2 hunting damage (you start on 5), so slow prey pays more per hit. Both get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
+**+1 Arrow** adds an arrow to every volley, widening it: more ground covered against quick prey, and several arrows landing on the same slow animal each do their damage. **+Damage** adds 2 hunting damage (you start on 5), so slow prey pays more per hit. Before you shoot, the badge beside your nocked arrows shows the volley's total damage: arrows times hunting damage. Both upgrades get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
 
 ## Troops
 

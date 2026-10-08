@@ -9,8 +9,9 @@ import { rand, pick, lerp, clamp } from './utils.js';
 const MIN_ELEV = 0.16;
 
 // Try a spread of angles and keep the one whose volley brings in the most, then wobble
-// it by the level's error. Better levels lead moving animals.
-export function chooseAim(m, team, lvl) {
+// it by the level's error. Better levels lead moving animals, allowing for the `wait`
+// seconds that pass before the shot is loosed.
+export function chooseAim(m, team, lvl, wait = 0) {
   const lo = team === BLUE ? -Math.PI + MIN_ELEV : MIN_ELEV;
   const hi = team === BLUE ? -MIN_ELEV : Math.PI - MIN_ELEV;
   const foeHp = m.castles[1 - team].hp;
@@ -19,7 +20,7 @@ export function chooseAim(m, team, lvl) {
   let best = null;
   for (let i = 0; i < lvl.aimSamples; i++) {
     const ang = lerp(lo, hi, (i + Math.random()) / lvl.aimSamples);
-    const r = simulateVolley(m, team, ang, lvl.lead);
+    const r = simulateVolley(m, team, ang, lvl.lead, wait);
     let score = r.meat + r.castle * castleWorth + rand(2);
     if (r.castle >= foeHp) score += 1000;
     if (!best || score > best.score) best = { ang, score };

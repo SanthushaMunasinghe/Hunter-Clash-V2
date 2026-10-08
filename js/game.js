@@ -3,7 +3,7 @@ import {
 } from './config.js';
 import { makeBoard } from './board.js';
 import { initAnimals, updateAnimals, respawnAnimals, queueRespawn } from './animals.js';
-import { collectObstacles, stepArrow, previewPath } from './arrow.js';
+import { collectObstacles, stepArrow, previewPath, volleyStarts } from './arrow.js';
 import { newTeam, dealHand, playCard, canPlayAny, basePoint } from './cards.js';
 import { chooseAim, chooseCard } from './ai.js';
 import { advance, strikeAct, laneStep, cpOwner } from './rules.js';
@@ -12,6 +12,7 @@ import { dist, clamp, lerp, rand, easeOut } from './utils.js';
 const TEAM_TEXT = ['#bfe0ff', '#ffc4c4'];
 const TEAM_RING = ['#6db6ff', '#ff7b7b'];
 const WALK_SPEED = 12; // slots per second, for the walk animation only
+const AI_AIM_TIME = 0.9; // seconds the computer spends lining up a shot it has already chosen
 
 export function createMatch(levelIdx, H) {
   const m = {
@@ -25,7 +26,7 @@ export function createMatch(levelIdx, H) {
     tick: 0,      // turns started so far, two per round
     lanes: [0, 1].map(() => ({ squads: [], towers: [] })),
     arrows: [],   // arrows in flight
-    volley: null, // the hunt in progress: who is shooting, where, and how many are left
+    volley: null, // the hunt in progress: who is shooting
     aim: null, nextId: 1, timers: [], wait: {},
     tutorial: levelIdx === 0, // show the drag demo until the first shot of a Noob match
   };
@@ -100,7 +101,7 @@ export class Game {
     if (fresh.length) this.emit('toast', 'New prey: ' + fresh.map(k => k[0].toUpperCase() + k.slice(1)).join(' and '));
     dealHand(m, team);
 
-    // Hunt: one volley, every arrow the team owns down the same line.
+    // Hunt: one volley, every arrow the team owns side by side.
     m.phase = 'aim';
     m.aim = null;
     this.emit('turn', team);
@@ -112,7 +113,7 @@ export class Game {
       m.tutorial = false;
     } else {
       await this.sleep(m, 0.5);
-      angle = chooseAim(m, RED, LEVELS[m.levelIdx]);
+      angle = chooseAim(m, RED, LEVELS[m.levelIdx], AI_AIM_TIME);
       await this.aiAim(m, angle);
     }
     m.aim = null;
@@ -145,7 +146,7 @@ export class Game {
 
   async aiAim(m, angle) {
     const from = angle + (Math.random() < 0.5 ? -1 : 1) * rand(0.3, 0.6);
-    const t0 = m.time, dur = 0.7;
+    const t0 = m.time, dur = AI_AIM_TIME - 0.2;
     m.aim = { team: RED, angle: from, pull: 0 };
     while (m.time - t0 < dur) {
       const k = easeOut((m.time - t0) / dur);
@@ -224,28 +225,24 @@ export class Game {
 
   // ---------------------------------------------------------------- hunting
 
-  // Looses the team's whole quiver down one line, an arrow every ARROW.volleyGap seconds.
-  // Resolves once the last one has landed.
+  // Looses the team's whole quiver at once, line abreast, so the volley sweeps a wider
+  // path the more arrows there are. Resolves once the last one has landed.
   fire(m, team, angle) {
-    m.volley = { team, angle, left: m.teams[team].arrows, wait: 0 };
+    for (const p of volleyStarts(m, team, angle)) {
+      m.arrows.push({
+        team, x: p.x, y: p.y, dx: Math.cos(angle), dy: Math.sin(angle),
+        bouncesLeft: ARROW.bounces, done: false, life: 0, fade: 0, trail: [],
+      });
+    }
+    m.teams[team].shots += m.teams[team].arrows;
+    this.sfx.play('shoot');
+    m.volley = { team };
     return new Promise(res => { m.wait.arrow = res; });
   }
 
   updateArrows(m, dt) {
     const v = m.volley;
     if (!v) return;
-    v.wait -= dt;
-    if (v.left > 0 && v.wait <= 0) {
-      const L = m.board.castles[v.team].launch;
-      m.arrows.push({
-        team: v.team, x: L.x, y: L.y, dx: Math.cos(v.angle), dy: Math.sin(v.angle),
-        bouncesLeft: ARROW.bounces, done: false, life: 0, fade: 0, trail: [],
-      });
-      v.left--;
-      v.wait = ARROW.volleyGap;
-      m.teams[v.team].shots++;
-      this.sfx.play('shoot');
-    }
 
     const obs = collectObstacles(m, v.team);
     for (let i = m.arrows.length - 1; i >= 0; i--) {
@@ -266,7 +263,7 @@ export class Game {
       }
     }
 
-    if (v.left === 0 && !m.arrows.length) {
+    if (!m.arrows.length) {
       m.volley = null;
       const done = m.wait.arrow;
       m.wait.arrow = null;
@@ -275,7 +272,7 @@ export class Game {
   }
 
   // An arrow is spent on the first animal it meets (or on the enemy castle) and bounces
-  // off everything else.
+  // off everything else until its bounces run out.
   arrowHit(m, ar, o) {
     if (o.kind === 'animal') {
       o.ref.kx += ar.dx * 70;
@@ -305,7 +302,15 @@ export class Game {
     a.flash = 0.18;
     m.teams[team].meat += gain;
     m.teams[team].hunted += gain;
-    this.fx.text(a.x, a.y - a.r - 26, '+' + gain, team === BLUE ? '#ffffff' : '#ffc4c4', true, gain >= 40 ? 20 : 16);
+    // Arrows of a volley that land on the same animal show as one running total.
+    if (a.pop && a.pop.t < 0.3) {
+      a.pop.gain += gain;
+    } else {
+      a.pop = this.fx.text(a.x, a.y - a.r - 26, '', team === BLUE ? '#ffffff' : '#ffc4c4', true);
+      a.pop.gain = gain;
+    }
+    a.pop.str = '+' + a.pop.gain;
+    a.pop.size = a.pop.gain >= 40 ? 20 : 16;
     this.fx.puff(a.x, a.y, '#ff8fa0', 5, 60);
     if (a.hp <= 0) {
       m.animals.splice(m.animals.indexOf(a), 1);

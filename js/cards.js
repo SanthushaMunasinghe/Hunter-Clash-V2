@@ -30,20 +30,22 @@ export function dealWeights(m, team) {
   };
 }
 
-// Deals a fresh hand: HAND_SIZE different cards drawn by weight. A hand always has
+// Takes one card out of `pool` at random, by weight.
+function draw(pool, weights) {
+  let roll = Math.random() * pool.reduce((sum, id) => sum + weights[id], 0), k = 0;
+  while (k < pool.length - 1 && (roll -= weights[pool[k]]) > 0) k++;
+  return pool.splice(k, 1)[0];
+}
+
+// Deals a fresh hand: HAND_SIZE different cards drawn by weight. A fresh hand always has
 // warriors or archers in it, so there is never a turn with no basic troops to send.
-// Playing a card empties its slot until the next deal.
 export function dealHand(m, team) {
   const weights = dealWeights(m, team);
   let hand;
   do {
     const pool = [...CARD_ORDER];
     hand = [];
-    while (hand.length < HAND_SIZE) {
-      let roll = Math.random() * pool.reduce((sum, id) => sum + weights[id], 0), k = 0;
-      while (k < pool.length - 1 && (roll -= weights[pool[k]]) > 0) k++;
-      hand.push(pool.splice(k, 1)[0]);
-    }
+    while (hand.length < HAND_SIZE) hand.push(draw(pool, weights));
   } while (!hand.includes('melee') && !hand.includes('archer'));
   m.teams[team].hand = CARD_ORDER.filter(id => hand.includes(id));
 }
@@ -94,7 +96,7 @@ export function dropTarget(m, team, id, x, y, options) {
   return best ? { valid: true, ...best } : { valid: false, x, y };
 }
 
-// Pays for hand[idx] and applies it. The hand slot stays empty until the next deal.
+// Pays for hand[idx], applies it and deals a new card into its slot.
 // Returns the new squad or tower, { upgrade: id } for an upgrade, or null if illegal.
 export function playCard(m, team, idx, target) {
   const T = m.teams[team], id = T.hand[idx], card = CARDS[id];
@@ -126,6 +128,9 @@ export function playCard(m, team, idx, target) {
     ent = { upgrade: id };
   }
   T.meat -= cost;
-  T.hand[idx] = null;
+  // The slot is refilled at once, by weight, from the cards the hand does not hold. The
+  // card just played is still in the hand at this point, so it cannot come straight back.
+  const pool = CARD_ORDER.filter(k => !T.hand.includes(k));
+  T.hand[idx] = pool.length ? draw(pool, dealWeights(m, team)) : null;
   return ent;
 }
