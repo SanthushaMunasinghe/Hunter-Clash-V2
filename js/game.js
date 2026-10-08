@@ -84,7 +84,7 @@ export class Game {
         const left = TURN_LIMIT - m.turn;
         if (left === 4 || left === 0 || left < 0) {
           this.emit('banner', left > 0 ? `${left + 1} TURNS LEFT` : left === 0 ? 'FINAL TURN' : 'TIEBREAK');
-          this.emit('toast', 'When time is up, the side with more points wins');
+          this.emit('toast', 'When time is up, castle health plus checkpoints held decides it');
           await this.sleep(m, 1.3);
         }
       }
@@ -324,8 +324,6 @@ export class Game {
   hurtCastle(m, team, dmg) {
     if (m.over) return;
     const c = m.castles[team], p = m.board.castles[team], heavy = dmg >= 5;
-    m.teams[1 - team].dealt += Math.min(dmg, c.hp);
-    m.teams[1 - team].dealtCastle += Math.min(dmg, c.hp);
     c.hp = Math.max(0, c.hp - dmg);
     c.flash = heavy ? 0.25 : 0.1;
     this.fx.shake = Math.max(this.fx.shake, heavy ? 5 : 1.5);
@@ -338,19 +336,22 @@ export class Game {
     this.finish(m, 1 - team, 'castle');
   }
 
+  // Checkpoints a team holds right now, over both roads.
+  checkpoints(m, team) {
+    return m.lanes.reduce((n, lane) => n + CHECKPOINTS.filter(c => cpOwner(lane, c) === team).length, 0);
+  }
+
   // A side's points if the match goes the distance: what is left of its castle, plus
-  // every point of damage it has dealt to enemy troops, towers and castle.
+  // the checkpoints it holds.
   points(m, team) {
-    const T = m.teams[team];
-    return Math.round(m.castles[team].hp * POINTS.health + T.dealtCastle * POINTS.castle + (T.dealt - T.dealtCastle) * POINTS.units);
+    return Math.round(m.castles[team].hp * POINTS.health + this.checkpoints(m, team) * POINTS.checkpoint);
   }
 
   // Who is ahead when time runs out: > 0 blue, < 0 red, 0 dead level.
   // Points decide, then checkpoints held, then meat in the bank.
   standing(m) {
-    const cps = team => m.lanes.reduce((n, lane) => n + CHECKPOINTS.filter(c => cpOwner(lane, c) === team).length, 0);
     return this.points(m, BLUE) - this.points(m, RED)
-      || cps(BLUE) - cps(RED)
+      || this.checkpoints(m, BLUE) - this.checkpoints(m, RED)
       || m.teams[BLUE].meat - m.teams[RED].meat;
   }
 
@@ -364,7 +365,6 @@ export class Game {
 
   hurtSquad(m, li, s, dmg) {
     const p = m.board.lanePoint(li, s.slot);
-    m.teams[1 - s.team].dealt += Math.min(dmg, s.hp);
     s.hp -= dmg;
     s.flash = 0.2;
     this.fx.text(p.x, p.y - 22, '-' + dmg, TEAM_TEXT[s.team], false, 13);
@@ -376,7 +376,6 @@ export class Game {
 
   hurtTower(m, li, tw, dmg) {
     const p = m.board.lanePoint(li, tw.slot);
-    m.teams[1 - tw.team].dealt += Math.min(dmg, tw.hp);
     tw.hp -= dmg;
     tw.flash = 0.2;
     this.fx.text(p.x, p.y - 56, '-' + dmg, TEAM_TEXT[tw.team], false, 13);

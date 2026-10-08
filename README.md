@@ -42,7 +42,7 @@ Checkpoints belong to whoever's front line has reached them, and troops can be d
 
 A castle has 100 health and its own guards, who shoot whatever reaches the gate. Pushes are meant to arrive, land a hit or two and die, so keep sending waves. An arrow that reaches the enemy castle only chips 1 off it. The lanes decide the match.
 
-Matches are capped at 25 turns. If both castles are still standing it goes on points: your castle's remaining health plus all the damage your side has dealt to enemy troops, towers and castle (the star in the HUD). So the side that did the fighting still wins. Level points go to checkpoints held, then meat.
+A side whose castle is destroyed has lost, whatever else it holds. Matches are capped at 25 turns; if both castles are still standing then, it goes on points: your castle's remaining health plus 10 for every checkpoint you hold at that moment (the star in the HUD). There are 10 checkpoints, so holding every one is worth as much as an untouched castle, and a checkpoint only counts while your troops or towers still hold it. Level points go to checkpoints held, then meat; if even that is level, play goes on a round at a time. The weights are `POINTS` in `js/config.js`.
 
 ## Opponents
 

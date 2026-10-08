@@ -100,15 +100,15 @@ export const DEAL = {
 export const START_MEAT = 15;
 export const UPGRADE = { damage: 5 }; // hunting damage added per +Damage card
 
-// A match never runs long. If both castles stand once this many turns are up, it goes
-// on points: your castle's remaining health plus all the damage your side has dealt to
-// enemy troops, towers and castle. Level points go to whoever holds more checkpoints,
-// then more meat; if even that is level, play goes on a round at a time.
+// A match never runs long. A side whose castle falls has lost. If both castles stand
+// once this many turns are up, it goes on points: your castle's remaining health plus
+// the checkpoints you hold at that moment. Level points go to whoever holds more
+// checkpoints, then more meat; if even that is level, play goes on a round at a time.
 export const TURN_LIMIT = 25;
-// What a point of each is worth at time-up. With everything on 1 the damage dealt to
-// troops over a match (hundreds) counts for far more than castle health (100 at most);
-// raise `health` and `castle` to make the castles matter more.
-export const POINTS = { health: 1, castle: 1, units: 1 };
+// What each is worth at time-up. There are 10 checkpoints on the board and a castle has
+// 100 health, so at 10 per checkpoint, holding every one is worth as much as an
+// untouched castle. Raise `checkpoint` to reward holding ground, lower it to reward defending.
+export const POINTS = { health: 1, checkpoint: 10 };
 
 // Opponents differ only in how well they play; every stat and price is identical.
 // aimSamples: angles tried per shot. aimError: random wobble in radians.
