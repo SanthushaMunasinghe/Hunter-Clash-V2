@@ -817,7 +817,7 @@ function iconURL(size, draw) {
 }
 
 // Spiky burst that stands for hunting damage.
-export function burst(ctx, x, y, r) {
+function burst(ctx, x, y, r) {
   ctx.beginPath();
   for (let i = 0; i < 16; i++) {
     const a = (i / 16) * TAU - Math.PI / 2, k = i % 2 ? 0.55 : 1;

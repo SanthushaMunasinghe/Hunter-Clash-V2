@@ -323,16 +323,20 @@ export class Renderer {
   drawVolleyDamage(ctx, m) {
     const T = m.teams[BLUE], L = m.board.castles[BLUE].launch, txt = String(T.arrows * T.damage);
     ctx.font = S.fontStr(17);
-    const h = 26, w = ctx.measureText(txt).width + 38;
+    const h = 26, numW = ctx.measureText(txt).width;
+    ctx.font = S.fontStr(12);
+    const w = numW + ctx.measureText('DMG').width + 25;
     const x = L.x + ((T.arrows - 1) / 2) * ARROW.spread + 16, y = L.y - NOCK;
     ctx.fillStyle = 'rgba(31,36,51,0.92)';
     S.rr(ctx, x, y - h / 2, w, h, h / 2);
     ctx.fill();
-    S.burst(ctx, x + 15, y, 9);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('DMG', x + numW + 15, y + 2);
+    ctx.font = S.fontStr(17);
     ctx.fillStyle = '#ffcf3f';
-    ctx.fillText(txt, x + 28, y + 1);
+    ctx.fillText(txt, x + 10, y + 1);
   }
 
   // The looping hand demo shown on the first turn of a Noob match: press below the

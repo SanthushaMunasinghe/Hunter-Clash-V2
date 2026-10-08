@@ -21,7 +21,7 @@ The herd is small, about six animals. A kill comes back two rounds later.
 - Nothing ever stands still.
 - Richer prey arrives every 5 turns: cow on 6, bull and deer on 11, bear on 16, dino and stag on 21.
 
-**+1 Arrow** adds an arrow to every volley, widening it: more ground covered against quick prey, and several arrows landing on the same slow animal each do their damage. **+Damage** adds 2 hunting damage (you start on 5), so slow prey pays more per hit. Before you shoot, the badge beside your nocked arrows shows the volley's total damage: arrows times hunting damage. Both upgrades get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
+**+1 Arrow** adds an arrow to every volley, widening it: more ground covered against quick prey, and several arrows landing on the same slow animal each do their damage. **+Damage** adds 2 hunting damage (you start on 5), so slow prey pays more per hit. Before you shoot, the DMG badge beside your nocked arrows shows the volley's total damage: arrows times hunting damage. Both upgrades get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
 
 ## Troops
 
