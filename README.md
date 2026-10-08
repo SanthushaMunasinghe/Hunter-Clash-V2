@@ -17,11 +17,11 @@ The deal is random but weighted. Early on it is mostly Warriors, Archers and the
 The herd is small, about six animals. A kill comes back two rounds later.
 
 - **Quick prey** (rabbit, deer, stag; gold number) dies to any hit and pays its whole bounty at once. It keeps to the middle of the field, far from both castles, and moves fast. Arrows are slow by comparison and the aim preview does not lead for you, so you have to shoot at where the animal will be.
-- **Slow prey** (sheep, cow, bull, bear, dino) pays a share of its bounty per hit, in proportion to hunting damage, and takes several hits. The cheapest kinds graze nearest the castles; richer ones roam further out.
+- **Slow prey** (sheep, cow, bull, bear, dino) takes several hits. The number over an animal is the meat on it, which is also its health: each arrow that hits takes your hunting damage off it and pays you exactly that much, down to whatever is left. Richer prey carries more meat, so it lasts longer; it does not pay more per hit. The cheapest kinds graze nearest the castles; richer ones roam further out.
 - Nothing ever stands still.
 - Richer prey arrives every 5 turns: cow on 6, bull and deer on 11, bear on 16, dino and stag on 21.
 
-**+1 Arrow** adds an arrow to every volley, widening it: more ground covered against quick prey, and several arrows landing on the same slow animal each do their damage. **+Damage** adds 2 hunting damage (you start on 5), so slow prey pays more per hit. Before you shoot, the DMG badge beside your nocked arrows shows the volley's total damage: arrows times hunting damage. Both upgrades get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
+**+1 Arrow** adds an arrow to every volley, widening it: more ground covered against quick prey, and several arrows landing on the same slow animal each do their damage. **+Damage** adds 5 hunting damage (you start on 12), so every hit on slow prey brings in 5 more meat. Before you shoot, the DMG badge on your castle shows your hunting damage, the meat each arrow takes from an animal it hits, followed by the number of arrows once you have more than one (“17 DMG ×2”). Both upgrades get dearer each time you buy them. Meat spent here is meat not spent on troops, so a greedy hunter can be rushed.
 
 ## Troops
 

@@ -29,9 +29,10 @@ export const CASTLE = {
 // An arrow is spent on the first animal it hits. It bounces off the field edge `bounces`
 // times and breaks on the next edge it meets. Arrows are slow next to quick prey, so a
 // shot has to be aimed at where the animal will be. A volley flies line abreast, `spread`
-// px between neighbours. damage is the starting hunting damage. castleDamage is the token
-// chip an arrow takes off the enemy castle if it gets that far; it never grows.
-export const ARROW = { speed: 270, radius: 6, step: 3, bounces: 1, damage: 5, castleDamage: 1, spread: 16 };
+// px between neighbours. damage is the starting hunting damage: the meat an arrow takes
+// off the animal it hits. castleDamage is the token chip an arrow takes off the enemy
+// castle if it gets that far; it never grows.
+export const ARROW = { speed: 270, radius: 6, step: 3, bounces: 1, damage: 12, castleDamage: 1, spread: 16 };
 
 // Lane troops. speed: slots covered in one step. range: how many slots ahead it can hit;
 // nothing reaches further than 2. dmg: damage per strike by target kind.
@@ -45,21 +46,22 @@ export const UNITS = {
   tower: { hp: 60, range: 2, dmg: { melee: 4, archer: 4, giant: 4 } },
 };
 
-// Prey. hp is how much hunting damage it soaks up; meat is what it pays out in total,
-// shared across hits in proportion to damage. Fast animals die to any hit and pay well
-// but have to be led; slow ones are easy targets that pay a little per hit.
+// Prey. meat is what the animal carries, shown over its head. It is also its health: an
+// arrow takes the hunter's damage off it and pays exactly that much, so richer prey lasts
+// longer rather than paying more per hit. Fast animals lose the lot to any hit and pay
+// well but have to be led; slow ones are easy targets that take several hits.
 // from: the turn it first appears. Richer prey arrives every 5 turns.
 // band: where it roams, as a fraction of the way from the middle of the field to a base.
 // Cheap prey grazes near the castles; the quick kinds keep to the middle, far from both.
 export const ANIMALS = {
-  sheep: { hp: 20, meat: 48, r: 15, speed: 15, from: 1, band: [0.5, 0.86] },
-  rabbit: { hp: 5, meat: 18, r: 12, speed: 92, fast: true, from: 1, band: [0, 0.26] },
-  cow: { hp: 25, meat: 70, r: 17, speed: 14, from: 6, band: [0.42, 0.8] },
-  bull: { hp: 30, meat: 96, r: 19, speed: 13, from: 11, band: [0.32, 0.72] },
-  deer: { hp: 5, meat: 28, r: 14, speed: 112, fast: true, from: 11, band: [0, 0.26] },
-  bear: { hp: 40, meat: 144, r: 23, speed: 12, from: 16, band: [0.22, 0.62] },
-  dino: { hp: 50, meat: 220, r: 27, speed: 10, from: 21, band: [0.08, 0.5] },
-  stag: { hp: 5, meat: 42, r: 15, speed: 128, fast: true, from: 21, band: [0, 0.26] },
+  sheep: { meat: 48, r: 15, speed: 15, from: 1, band: [0.5, 0.86] },
+  rabbit: { meat: 18, r: 12, speed: 92, fast: true, from: 1, band: [0, 0.26] },
+  cow: { meat: 70, r: 17, speed: 14, from: 6, band: [0.42, 0.8] },
+  bull: { meat: 96, r: 19, speed: 13, from: 11, band: [0.32, 0.72] },
+  deer: { meat: 28, r: 14, speed: 112, fast: true, from: 11, band: [0, 0.26] },
+  bear: { meat: 144, r: 23, speed: 12, from: 16, band: [0.22, 0.62] },
+  dino: { meat: 220, r: 27, speed: 10, from: 21, band: [0.08, 0.5] },
+  stag: { meat: 42, r: 15, speed: 128, fast: true, from: 21, band: [0, 0.26] },
 };
 // Opening herd, as point-mirrored pairs.
 export const HERD_START = ['sheep', 'sheep', 'rabbit'];
@@ -96,7 +98,7 @@ export const DEAL = {
   noCheckpoint: 0.4,        // towers are dealt less while you hold no checkpoint to put one on
 };
 export const START_MEAT = 15;
-export const UPGRADE = { damage: 2 }; // hunting damage added per +Damage card
+export const UPGRADE = { damage: 5 }; // hunting damage added per +Damage card
 
 // A match never runs long. If both castles stand once this many turns are up, it goes
 // on points: your castle's remaining health plus all the damage your side has dealt to

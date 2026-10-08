@@ -91,7 +91,7 @@ export function volleyStarts(m, team, angle) {
 function freeze(m, team, lead) {
   return collectObstacles(m, team).map(o => {
     const v = lead && o.kind === 'animal' ? animalVelocity(o.ref) : { x: 0, y: 0 };
-    return { ...o, x0: o.x, y0: o.y, vx: v.x, vy: v.y, hp: o.ref.hp };
+    return { ...o, x0: o.x, y0: o.y, vx: v.x, vy: v.y, left: o.ref.left };
   });
 }
 
@@ -114,10 +114,10 @@ function dryVolley(m, team, angle, obs, { start = 0, maxContacts = Infinity, pat
   const onHit = (o, ar) => {
     if (ar.pts) ar.pts.push({ x: ar.x, y: ar.y, kind: o.kind, ox: o.x, oy: o.y, r: o.r });
     if (o.kind === 'animal') {
-      const dealt = Math.min(o.hp, damage), stray = o.ref.speed * t * doubt;
-      o.hp -= dealt;
-      res.meat += (o.ref.meat * dealt / o.ref.maxHp) * Math.min(1, (o.r + ARROW.radius) / (stray || 1));
-      if (o.hp <= 0) o.dead = true;
+      const gain = o.ref.fast ? o.left : Math.min(o.left, damage), stray = o.ref.speed * t * doubt;
+      o.left -= gain;
+      res.meat += gain * Math.min(1, (o.r + ARROW.radius) / (stray || 1));
+      if (o.left <= 0) o.dead = true;
       return 'stop';
     }
     if (o.kind === 'castle') {

@@ -318,25 +318,34 @@ export class Renderer {
     if (mine) this.drawVolleyDamage(ctx, m);
   }
 
-  // What the player's volley is worth if every arrow lands: hunting damage times arrows.
-  // Shown beside the nocked arrows for the whole hunt, until the shot is loosed.
+  // The player's hunting damage: the meat each arrow takes from an animal it hits, with
+  // the number of arrows after it when there is more than one ("17 DMG x2"). It sits on
+  // the castle wall, where it cannot cover any prey, for the whole hunt until the shot
+  // is loosed.
   drawVolleyDamage(ctx, m) {
-    const T = m.teams[BLUE], L = m.board.castles[BLUE].launch, txt = String(T.arrows * T.damage);
-    ctx.font = S.fontStr(17);
-    const h = 26, numW = ctx.measureText(txt).width;
-    ctx.font = S.fontStr(12);
-    const w = numW + ctx.measureText('DMG').width + 25;
-    const x = L.x + ((T.arrows - 1) / 2) * ARROW.spread + 16, y = L.y - NOCK;
+    const T = m.teams[BLUE], c = m.board.castles[BLUE];
+    const parts = [[String(T.damage), 17, '#ffcf3f'], ['DMG', 12, '#ffffff']];
+    if (T.arrows > 1) parts.push(['\u00d7' + T.arrows, 15, '#ffcf3f']);
+    const h = 26, gap = 5;
+    let w = 20 - gap;
+    for (const p of parts) {
+      ctx.font = S.fontStr(p[1]);
+      w += (p[3] = ctx.measureText(p[0]).width) + gap;
+    }
+    let x = c.x - w / 2;
+    const y = c.drawY - 8;
     ctx.fillStyle = 'rgba(31,36,51,0.92)';
     S.rr(ctx, x, y - h / 2, w, h, h / 2);
     ctx.fill();
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('DMG', x + numW + 15, y + 2);
-    ctx.font = S.fontStr(17);
-    ctx.fillStyle = '#ffcf3f';
-    ctx.fillText(txt, x + 10, y + 1);
+    x += 10;
+    for (const [txt, size, color, tw] of parts) {
+      ctx.font = S.fontStr(size);
+      ctx.fillStyle = color;
+      ctx.fillText(txt, x, y + 1);
+      x += tw + gap;
+    }
   }
 
   // The looping hand demo shown on the first turn of a Noob match: press below the

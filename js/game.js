@@ -278,7 +278,7 @@ export class Game {
       o.ref.kx += ar.dx * 70;
       o.ref.ky += ar.dy * 70;
       this.hurtAnimal(m, o.ref, m.teams[ar.team].damage, ar.team);
-      if (o.ref.hp <= 0) o.dead = true;
+      if (o.ref.left <= 0) o.dead = true;
       return 'stop';
     }
     if (o.kind === 'castle') {
@@ -291,13 +291,11 @@ export class Game {
 
   // ---------------------------------------------------------------- damage
 
-  // Hunting damage turns the animal's meat into the hunter's, share for share. The last
-  // hit takes whatever is left, so rounding never loses any.
+  // Hunting damage is meat: an arrow takes that much off the animal and the hunter gets
+  // it, down to whatever is left. Quick prey loses the lot to any hit.
   hurtAnimal(m, a, dmg, team) {
-    const dealt = Math.min(a.hp, dmg);
-    if (dealt <= 0) return 0;
-    a.hp -= dealt;
-    const gain = a.hp <= 0 ? a.left : Math.min(a.left, Math.round((a.meat * dealt) / a.maxHp));
+    const gain = a.fast ? a.left : Math.min(a.left, dmg);
+    if (gain <= 0) return 0;
     a.left -= gain;
     a.flash = 0.18;
     m.teams[team].meat += gain;
@@ -312,7 +310,7 @@ export class Game {
     a.pop.str = '+' + a.pop.gain;
     a.pop.size = a.pop.gain >= 40 ? 20 : 16;
     this.fx.puff(a.x, a.y, '#ff8fa0', 5, 60);
-    if (a.hp <= 0) {
+    if (a.left <= 0) {
       m.animals.splice(m.animals.indexOf(a), 1);
       queueRespawn(m);
       this.fx.puff(a.x, a.y, '#ffffff', 12, 95);
